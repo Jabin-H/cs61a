@@ -1,0 +1,18 @@
+(define (let-to-lambda expr)
+  (cond
+    ((atom? expr) expr)
+    ((quoted? expr) expr)
+    ((or (lambda? expr) (define? expr))
+     ((lambda (form params body)
+        (cons form (cons params (map let-to-lambda body))))
+      (car expr) (cadr expr) (cddr expr)))
+    ((let? expr)
+     ((lambda (values body)
+        ((lambda (formals args)
+           (cons (cons (quote lambda)
+                       (cons formals (map let-to-lambda body)))
+                 (map let-to-lambda args)))
+         (car (zip values)) (cadr (zip values))))
+      (cadr expr) (cddr expr)))
+    (else
+     (map let-to-lambda expr))))

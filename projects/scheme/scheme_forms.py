@@ -107,9 +107,9 @@ def do_if_form(expressions, env):
     """
     validate_form(expressions, 2, 3)
     if is_scheme_true(scheme_eval(expressions.first, env)):
-        return scheme_eval(expressions.rest.first, env)
+        return scheme_eval(expressions.rest.first, env, True)
     elif len(expressions) == 3:
-        return scheme_eval(expressions.rest.rest.first, env)
+        return scheme_eval(expressions.rest.rest.first, env, True)
 
 def do_and_form(expressions, env):
     """Evaluate a (short-circuited) and form.
@@ -126,20 +126,28 @@ def do_and_form(expressions, env):
     False
     """
     # BEGIN PROBLEM 12
-    val = True
-    while not scheme_nullp(expressions):
+    if expressions is nil:
+        return True
+    while expressions.rest is not nil:
         val = scheme_eval(expressions.first, env)
         if is_scheme_false(val):
             return val
         expressions = expressions.rest
-    return val
+    return scheme_eval(expressions.first, env, True)
     # END PROBLEM 12
 
 def do_or_form(expressions, env):
     """Evaluate a (short-circuited) or form.
 
     >>> env = create_global_frame()
-    >>> do_or_form(read_line("(10 (print 1))"), env) # evaluating (or 10 (print 1))
+    >>> do_or_form(read_line("(10 (prin    if expressions is nil:
+        return True
+    while expressions.rest is not nil:
+        val = scheme_eval(expressions.first, env)
+        if is_scheme_false(val):
+            return val
+        expressions = expressions.rest
+    return scheme_eval(expressions.first, env, True)t 1))"), env) # evaluating (or 10 (print 1))
     10
     >>> do_or_form(read_line("(#f 2 3 #t #f)"), env) # evaluating (or #f 2 3 #t #f)
     2
@@ -150,13 +158,14 @@ def do_or_form(expressions, env):
     6
     """
     # BEGIN PROBLEM 12
-    val = False
-    while not scheme_nullp(expressions):
+    if expressions is nil:
+        return False
+    while expressions.rest is not nil:
         val = scheme_eval(expressions.first, env)
         if is_scheme_true(val):
             return val
         expressions = expressions.rest
-    return val
+    return scheme_eval(expressions.first, env, True)
     # END PROBLEM 12
 
 def do_cond_form(expressions, env):
@@ -206,11 +215,8 @@ def make_let_frame(bindings, env):
     while bindings is not nil:
         binding = bindings.first
         validate_form(binding, 2, 2)
-        binding_list.append(binding)
+        names, vals = Pair(binding.first, names), Pair(scheme_eval(binding.rest.first, env), vals)
         bindings = bindings.rest
-    for i in range(len(binding_list)-1, -1, -1):
-        val = scheme_eval(binding_list[i].rest.first, env)
-        names, vals = Pair(binding_list[i].first, names), Pair(val, vals)
     validate_formals(names)
     # END PROBLEM 14
     return env.make_child_frame(names, vals)
@@ -230,7 +236,7 @@ def do_quasiquote_form(expressions, env):
             if level == 0:
                 expressions = val.rest
                 validate_form(expressions, 1, 1)
-                return scheme_eval(expressions.first, env)
+                return scheme_eval(expressions.first, env, True)
         elif val.first == 'quasiquote':
             level += 1
 

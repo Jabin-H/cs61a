@@ -47,12 +47,12 @@
 (define (let-to-lambda expr)
   (cond ((atom? expr)
          ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
+         expr
          ; END OPTIONAL PROBLEM 2
          )
         ((quoted? expr)
          ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
+         expr
          ; END OPTIONAL PROBLEM 2
          )
         ((or (lambda? expr)
@@ -61,23 +61,84 @@
                (params (cadr expr))
                (body   (cddr expr)))
            ; BEGIN OPTIONAL PROBLEM 2
-           'replace-this-line
+           (cons form (cons params (map let-to-lambda body)))
            ; END OPTIONAL PROBLEM 2
            ))
         ((let? expr)
          (let ((values (cadr expr))
-               (body   (cddr expr)))
-           ; BEGIN OPTIONAL PROBLEM 2
-           'replace-this-line
-           ; END OPTIONAL PROBLEM 2
-           ))
+              (body   (cddr expr)))
+          ; BEGIN OPTIONAL PROBLEM 2
+          (let ((formals (car (zip values)))
+                 (args (cadr (zip values))))
+            (cons (cons 'lambda (cons formals (map let-to-lambda body))) (map let-to-lambda args))
+             )
+          ; END OPTIONAL PROBLEM 2
+          ))
         (else
          ; BEGIN OPTIONAL PROBLEM 2
-         'replace-this-line
+         (map let-to-lambda expr)
          ; END OPTIONAL PROBLEM 2
          )))
 
 ; Some utility functions that you may find useful to implement for let-to-lambda
 
 (define (zip pairs)
-  'replace-this-line)
+  (if (null? pairs)
+      (list nil nil)
+      (let ((zipped (zip (cdr pairs))))
+          (list (cons (caar pairs) (car zipped))
+                 (append (cdar pairs) (cadr zipped)))))
+             )
+
+; for test
+(define let-to-lambda-code
+    '(define (let-to-lambda expr)
+         (cond ((atom? expr)
+         expr
+         )
+        ((quoted? expr)
+         expr
+         )
+        ((or (lambda? expr)
+             (define? expr))
+         (let ((form   (car expr))
+               (params (cadr expr))
+               (body   (cddr expr)))
+           (cons form (cons params (map let-to-lambda body)))
+           ))
+        ((let? expr)
+         (let ((values (cadr expr))
+              (body   (cddr expr)))
+          (let ((formals (car (zip values)))
+                 (args (cadr (zip values))))
+            (cons (cons 'lambda (cons formals (map let-to-lambda body))) (map let-to-lambda args))
+             )
+          ))
+        (else
+         (map let-to-lambda expr)
+         ))))
+     
+; (define let-to-lambda-without-let
+;  (let-to-lambda let-to-lambda-code))
+
+
+; (define (let-to-lambda-without-let expr)
+;   (cond
+;     ((atom? expr) expr)
+;     ((quoted? expr) expr)
+;     ((or (lambda? expr) (define? expr))
+;      ((lambda (form params body)
+;         (cons form (cons params (map let-to-lambda body))))
+;       (car expr) (cadr expr) (cddr expr)))
+;     ((let? expr)
+;      ((lambda (values body)
+;         ((lambda (formals args)
+;           (cons (cons (quote lambda)
+;                       (cons formals (map let-to-lambda body)))
+;                  (map let-to-lambda args)))
+;          (car (zip values)) (cadr (zip values))))
+;       (cadr expr) (cddr expr)))
+;     (else
+;      (map let-to-lambda expr))))
+
+;  (define let-to-lambda let-to-lambda-without-let)

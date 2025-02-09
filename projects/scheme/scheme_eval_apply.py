@@ -45,16 +45,16 @@ def scheme_apply(procedure, args, env):
        assert False, "Not a Frame: {}".format(env)
     if isinstance(procedure, BuiltinProcedure):
         # BEGIN PROBLEM 2
-        arguments = []
+        py_args = []
         while args is not nil:
-            arguments.append(args.first)
+            py_args.append(args.first)
             args = args.rest
         if procedure.need_env:
-            arguments += [env]
+            py_args.append(env)
         # END PROBLEM 2
         try:
             # BEGIN PROBLEM 2
-            return procedure.py_func(*arguments)
+            return procedure.py_func(*py_args)
             # END PROBLEM 2
         except TypeError as err:
             raise SchemeError('incorrect number of arguments: {0}'.format(procedure))
@@ -87,10 +87,12 @@ def eval_all(expressions, env):
     2
     """
     # BEGIN PROBLEM 6
-    value = None
-    while expressions is not nil:
-        value, expressions = scheme_eval(expressions.first, env), expressions.rest
-    return value
+    if expressions is nil:
+        return None
+    while expressions.rest is not nil:
+        scheme_eval(expressions.first, env)
+        expressions = expressions.rest
+    return scheme_eval(expressions.first, env, True)
     # END PROBLEM 6
 
 
@@ -126,7 +128,9 @@ def optimize_tail_calls(unoptimized_scheme_eval):
 
         result = Unevaluated(expr, env)
         # BEGIN OPTIONAL PROBLEM 1
-        "*** YOUR CODE HERE ***"
+        while isinstance(result, Unevaluated):
+            result = unoptimized_scheme_eval(result.expr, result.env)
+        return result
         # END OPTIONAL PROBLEM 1
     return optimized_eval
 
@@ -147,4 +151,4 @@ def optimize_tail_calls(unoptimized_scheme_eval):
 # Uncomment the following line to apply tail call optimization #
 ################################################################
 
-# scheme_eval = optimize_tail_calls(scheme_eval)
+scheme_eval = optimize_tail_calls(scheme_eval)
